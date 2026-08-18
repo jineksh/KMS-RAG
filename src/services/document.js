@@ -150,31 +150,4 @@ export const updateDocumentStatus = async (docId, status, userId) => {
     }
 };
 
-export const deleteDocument = async (docId, userId) => {
-    try {
-        if (!docId || !userId) {
-            throw new Error('Document ID and User ID are required');
-        }
-
-        const document = await prisma.document.findUnique({
-            where: { id: docId },
-        });
-
-        if (!document) {
-            throw new Error('Document not found');
-        }
-
-        if (document.userId !== userId) {
-            throw new Error('Unauthorized access to this document');
-        }
-
-        const deletedDocument = await prisma.document.delete({
-            where: { id: docId },
-        });
-
-        return deletedDocument;
-    } catch (error) {
-        throw new Error(`Failed to delete document: ${error.message}`);
-    }
-};
 

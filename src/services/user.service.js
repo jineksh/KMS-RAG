@@ -1,30 +1,10 @@
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+
 import { prisma } from '../config/db.js';
-import { SALT_ROUNDS, ROBOHASH_URL, TOKEN_EXPIRATION, JWT_SECRET } from '../config/env.js';
+import { hashPassword, comparePassword } from '../utils/hashPassword.js';
+import { generateAvatarUrl } from '../utils/avatarUrl.js';
+import { generateToken } from '../utils/generateToken.js';
 
-export const hashPassword = async (password) => {
-    try {
-        const salt = bcrypt.genSaltSync(parseInt(SALT_ROUNDS));
-        const hashedPassword = bcrypt.hashSync(password, salt);
-        return hashedPassword;
-    } catch (error) {
-        throw new Error(`Error hashing password: ${error.message}`);
-    }
-};
 
-export const comparePassword = async (password, hashedPassword) => {
-    try {
-        const isMatch = await bcrypt.compare(password, hashedPassword);
-        return isMatch;
-    } catch (error) {
-        throw new Error(`Error comparing passwords: ${error.message}`);
-    }
-};
-
-export const generateAvatarUrl = (username) => {
-    return `https://robohash.org/${username}`;
-};
 
 
 
@@ -64,18 +44,7 @@ export const signupUser = async ({ username, email, password }) => {
 
 
 
-export const generateToken = (userId,user_email) => {
-    try {
-        const token = jwt.sign(
-            { id: userId,email : user_email },
-            JWT_SECRET,
-            { expiresIn: TOKEN_EXPIRATION }
-        );
-        return token;
-    } catch (error) {
-        throw new Error(`Error generating token: ${error.message}`);
-    }
-};
+
 
 
 export const signinUser = async ({ email, password }) => {

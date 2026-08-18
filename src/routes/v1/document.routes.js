@@ -5,7 +5,6 @@ import {
     getUserDocs,
     getDoc,
     updateDocStatus,
-    deleteDoc,
 } from '../../controllers/document.controller.js';
 import { upload } from '../../middleware/multer.js';
 
@@ -15,6 +14,6 @@ router.post('/upload', verifyToken, upload.single('document'), uploadDocument);
 router.get('/', verifyToken, getUserDocs);
 router.get('/:docId', verifyToken, getDoc);
 router.patch('/:docId/status', verifyToken, updateDocStatus);
-router.delete('/:docId', verifyToken, deleteDoc);
+
 
 export default router;

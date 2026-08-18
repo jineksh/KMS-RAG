@@ -3,7 +3,6 @@ import {
     getUserDocuments,
     getDocumentById,
     updateDocumentStatus,
-    deleteDocument,
 } from '../services/document.js';
 
 export const uploadDocument = async (req, res) => {
@@ -199,50 +198,3 @@ export const updateDocStatus = async (req, res) => {
     }
 };
 
-export const deleteDoc = async (req, res) => {
-    try {
-        const { docId } = req.params;
-
-        if (!docId || isNaN(docId)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Valid document ID is required',
-            });
-        }
-
-        if (!req.user || !req.user.id) {
-            return res.status(401).json({
-                success: false,
-                message: 'User authentication required',
-            });
-        }
-
-        const deletedDocument = await deleteDocument(parseInt(docId), req.user.id);
-
-        return res.status(200).json({
-            success: true,
-            message: 'Document deleted successfully',
-            data: deletedDocument,
-        });
-    } catch (error) {
-        if (error.message.includes('not found')) {
-            return res.status(404).json({
-                success: false,
-                message: 'Document not found',
-            });
-        }
-
-        if (error.message.includes('Unauthorized')) {
-            return res.status(403).json({
-                success: false,
-                message: error.message,
-            });
-        }
-
-        return res.status(500).json({
-            success: false,
-            message: 'Internal server error',
-            error: error.message,
-        });
-    }
-};
