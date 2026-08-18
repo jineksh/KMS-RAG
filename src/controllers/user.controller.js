@@ -4,11 +4,6 @@ import {
     getUserById,
 } from '../services/user.service.js';
 
-/**
- * Controller for user signup
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- */
 export const signup = async (req, res) => {
     try {
         const { username, email, password, confirmPassword } = req.body;
@@ -79,11 +74,7 @@ export const signup = async (req, res) => {
     }
 };
 
-/**
- * Controller for user signin
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- */
+
 export const signin = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -134,11 +125,7 @@ export const signin = async (req, res) => {
     }
 };
 
-/**
- * Controller to get user profile
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- */
+
 export const getUserProfile = async (req, res) => {
     try {
         const { userId } = req.params;

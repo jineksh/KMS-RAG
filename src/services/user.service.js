@@ -1,15 +1,8 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../config/db.js';
-import { SALT_ROUNDS, ROBOHASH_URL, TOKEN_EXPIRATION,JWT_SECRET } from '../config/env.js'; 
+import { SALT_ROUNDS, ROBOHASH_URL, TOKEN_EXPIRATION, JWT_SECRET } from '../config/env.js';
 
-
-
-/**
- * Hash password using bcrypt
- * @param {string} password - Plain text password
- * @returns {Promise<string>} Hashed password
- */
 export const hashPassword = async (password) => {
     try {
         const salt = bcrypt.genSaltSync(parseInt(SALT_ROUNDS));
@@ -20,12 +13,6 @@ export const hashPassword = async (password) => {
     }
 };
 
-/**
- * Compare password with hashed password
- * @param {string} password - Plain text password
- * @param {string} hashedPassword - Hashed password from database
- * @returns {Promise<boolean>} True if passwords match
- */
 export const comparePassword = async (password, hashedPassword) => {
     try {
         const isMatch = await bcrypt.compare(password, hashedPassword);
@@ -35,34 +22,18 @@ export const comparePassword = async (password, hashedPassword) => {
     }
 };
 
-/**
- * Generate avatar URL using robohash
- * @param {string} username - Username for avatar generation
- * @returns {string} Avatar URL
- */
 export const generateAvatarUrl = (username) => {
-    const url = `https://robohash.org/${username}`;
-    console.log(`[avtar] : Generated avatar URL for ${username}: ${url}`);
-    return url;
+    return `https://robohash.org/${username}`;
 };
 
-/**
- * Signup new user
- * @param {Object} userData - User data object
- * @param {string} userData.username - Username
- * @param {string} userData.email - Email address
- * @param {string} userData.password - Plain text password
- * @returns {Promise<Object>} Created user object (without password)
- * @throws {Error} If user already exists or database error
- */
+
+
 export const signupUser = async ({ username, email, password }) => {
     try {
-        // Validate input
         if (!username || !email || !password) {
             throw new Error('Username, email, and password are required');
         }
 
-        // Check if email already exists
         const existingUser = await prisma.user.findUnique({
             where: { email },
         });
@@ -71,15 +42,9 @@ export const signupUser = async ({ username, email, password }) => {
             throw new Error('Email already exists');
         }
 
-        // Hash password
         const hashedPassword = await hashPassword(password);
-
-        // Generate avatar URL
         const avatar = generateAvatarUrl(username);
 
-        console.log(`[avtar] : Generated avatar URL for ${username}: ${avatar}`);
-
-        // Create user in database
         const newUser = await prisma.user.create({
             data: {
                 username,
@@ -89,7 +54,6 @@ export const signupUser = async ({ username, email, password }) => {
             },
         });
 
-        // Return user without password
         const { password: _, ...userWithoutPassword } = newUser;
         return userWithoutPassword;
     } catch (error) {
@@ -97,12 +61,9 @@ export const signupUser = async ({ username, email, password }) => {
     }
 };
 
-/**
- * Generate JWT token
- * @param {number} userId - User ID
- * @returns {string} JWT token
- * @throws {Error} If token generation fails
- */
+
+
+
 export const generateToken = (userId,user_email) => {
     try {
         const token = jwt.sign(
@@ -116,14 +77,7 @@ export const generateToken = (userId,user_email) => {
     }
 };
 
-/**
- * Signin user
- * @param {Object} credentials - User credentials
- * @param {string} credentials.email - Email address
- * @param {string} credentials.password - Plain text password
- * @returns {Promise<Object>} User object with token (without password)
- * @throws {Error} If credentials are invalid or user not found
- */
+
 export const signinUser = async ({ email, password }) => {
     try {
         // Validate input
@@ -161,12 +115,7 @@ export const signinUser = async ({ email, password }) => {
     }
 };
 
-/**
- * Get user by ID
- * @param {number} userId - User ID
- * @returns {Promise<Object>} User object
- * @throws {Error} If user not found
- */
+
 export const getUserById = async (userId) => {
     try {
         if (!userId) {
