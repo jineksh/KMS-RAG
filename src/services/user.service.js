@@ -103,10 +103,10 @@ export const signupUser = async ({ username, email, password }) => {
  * @returns {string} JWT token
  * @throws {Error} If token generation fails
  */
-export const generateToken = (userId) => {
+export const generateToken = (userId,user_email) => {
     try {
         const token = jwt.sign(
-            { id: userId },
+            { id: userId,email : user_email },
             JWT_SECRET,
             { expiresIn: TOKEN_EXPIRATION }
         );
@@ -148,7 +148,7 @@ export const signinUser = async ({ email, password }) => {
         }
 
         // Generate JWT token
-        const token = generateToken(user.id);
+        const token = generateToken(user.id, user.email);
 
         // Return user without password and with token
         const { password: _, ...userWithoutPassword } = user;

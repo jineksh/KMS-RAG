@@ -10,5 +10,5 @@ export const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key_change_in_p
 
 
 export const SALT_ROUNDS = process.env.SALT_ROUNDS || 10;
-export const ROBOHASH_URL = process.env.ROBOHASH_URL;
+export const ROBOHASH_URL = process.env.ROBOHASH_URL || 'https://robohash.org';
 export const TOKEN_EXPIRATION = process.env.TOKEN_EXPIRATION || '7d';
