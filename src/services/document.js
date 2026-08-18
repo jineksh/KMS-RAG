@@ -2,6 +2,8 @@ import { prisma } from '../config/db.js';
 import { calculateFileHash } from '../utils/generateHash.js';
 import fs from 'fs';
 import { promises as fsPromises } from 'fs';
+import {indexingPhase} from "../rag/ingition.js";
+import indexingQueue from '../queue/indexing.js';
 
 export const handleUpload = async (file, user) => {
     try {
@@ -50,6 +52,11 @@ export const handleUpload = async (file, user) => {
                 hash_code: fileHash,
                 status: 'PENDING',
             },
+        });
+
+        await indexingQueue.add('indexing-job', {
+            filePath: filePath,
+            documentId: newDocument.id,
         });
 
         return newDocument;
