@@ -16,3 +16,4 @@ export const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 export const QDRANT_URL = process.env.QDRANT_URL || 'http://localhost:6333';
 export const REDIS_HOST = process.env.REDIS_HOST || 'localhost';
 export const REDIS_PORT = process.env.REDIS_PORT || 6379;
+export const COLLECTION_NAME = process.env.COLLECTION_NAME || "KMS-RAG"

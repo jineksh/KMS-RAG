@@ -4,8 +4,19 @@ import { connectToDatabase } from './config/db.js'
 import apiRoutes from './routes/index.js'
 import { prisma } from './config/db.js'
 import { subRedis } from './config/redis.js'
+import cors from 'cors'
 
-const app = express()
+
+const app = express();
+
+app.use(
+    cors({
+        origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+        credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+    })
+)
 
 const clients = new Map()
 
@@ -20,22 +31,32 @@ subRedis.subscribe('indexing-complete', (err) => {
 
 subRedis.on('message', async (channel, message) => {
     if (channel === 'indexing-complete') {
-        const { id, status } = JSON.parse(message)
-        console.log(`[Redis] : Received message on channel ${channel}: Document ID: ${id}, Status: ${status}`)
+        try {
+            const { id, status } = JSON.parse(message)
+            console.log(`[Redis] : Message on ${channel} -> Doc ID: ${id}, Status: ${status}`)
 
-        const clientResponse = clients.get(String(id))
+            const clientSet = clients.get(String(id))
 
-        if (clientResponse) {
-            clientResponse.write(`data: ${JSON.stringify({ id, status })}\n\n`)
+            if (clientSet && clientSet.size > 0) {
+                const payload = `data: ${JSON.stringify({ id, status })}\n\n`
 
-            if (status === 'done' || status === 'failed') {
-                clientResponse.end()
-                clients.delete(String(id))
-                console.log(`[SSE] : Connection closed for document: ${id}`)
+                clientSet.forEach((res) => {
+                    res.write(payload)
+
+                    if (status === 'PROCESSED' || status === 'FAILED') {
+                        res.end()
+                    }
+                })
+
+                if (status === 'PROCESSED' || status === 'FAILED') {
+                    clients.delete(String(id))
+                    console.log(`[SSE] : Closed connections for document: ${id}`)
+                }
+            } else {
+                console.warn(`[SSE] : No active client found for document ID: ${id}`)
             }
-
-        } else {
-            console.warn(`[SSE] : No client found for document ID: ${id}`)
+        } catch (err) {
+            console.error('[Redis SSE] : Error handling message:', err)
         }
     }
 })
@@ -54,37 +75,57 @@ app.get('/', (req, res) => {
     res.json({ message: 'API is running' })
 })
 
-app.get('/api/documents/:documentId/events', async(req, res) => {
+app.get('/api/v1/documents/:documentId/events', async (req, res) => {
     const { documentId } = req.params
+    const parsedId = Number(documentId)
 
+    if (isNaN(parsedId)) {
+        return res.status(400).json({ error: 'Invalid document ID' })
+    }
+
+    // SSE Headers
     res.setHeader('Content-Type', 'text/event-stream')
-    res.setHeader('Cache-Control', 'no-cache')
+    res.setHeader('Cache-Control', 'no-cache, no-transform')
     res.setHeader('Connection', 'keep-alive')
+    res.setHeader('X-Accel-Buffering', 'no')
+
+
+    res.flushHeaders()
 
     const document = await prisma.document.findUnique({
-        where: { id: Number(documentId) },
-        select: { status: true }
-    });
+        where: { id: parsedId },
+        select: { status: true },
+    })
 
     if (!document) {
-        res.write(`data: ${JSON.stringify({ status: 'failed', message: 'Document not found' })}\n\n`)
+        res.write(`data: ${JSON.stringify({ status: 'FAILED', message: 'Document not found' })}\n\n`)
         res.end()
         return
     }
 
 
-    if (document.status === 'done' || document.status === 'failed') {
+    if (document.status === 'PROCESSED' || document.status === 'FAILED') {
         res.write(`data: ${JSON.stringify({ id: documentId, status: document.status })}\n\n`)
-        res.end()  // SSE band karo
-        console.log(`[SSE] : Document already ${document.status}, closing connection`)
+        res.end()
+        console.log(`[SSE] : Document already ${document.status}, closed connection for: ${documentId}`)
         return
     }
 
-    clients.set(String(documentId), res)
-    console.log(`[SSE] : Client connected for document: ${documentId}`)
 
+    if (!clients.has(String(documentId))) {
+        clients.set(String(documentId), new Set())
+    }
+    const clientSet = clients.get(String(documentId))
+    clientSet.add(res)
+
+    console.log(`[SSE] : Client connected for document: ${documentId} (Active listeners: ${clientSet.size})`)
+
+    // Cleanup on connection drop / abort
     req.on('close', () => {
-        clients.delete(String(documentId))
+        clientSet.delete(res)
+        if (clientSet.size === 0) {
+            clients.delete(String(documentId))
+        }
         console.log(`[SSE] : Client disconnected for document: ${documentId}`)
     })
 })

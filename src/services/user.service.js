@@ -75,6 +75,9 @@ export const signinUser = async ({ email, password }) => {
 
         // Return user without password and with token
         const { password: _, ...userWithoutPassword } = user;
+
+        console.log(userWithoutPassword);
+
         return {
             ...userWithoutPassword,
             token,

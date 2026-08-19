@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import { SALT_ROUNDS } from '../config/env.js';
 
 export const hashPassword = async (password) => {
     try {

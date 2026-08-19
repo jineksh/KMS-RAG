@@ -6,7 +6,7 @@ import {
 
 export const signup = async (req, res) => {
     try {
-        const { username, email, password, confirmPassword } = req.body;
+        const { username, email, password } = req.body;
 
         // Validate that all required fields are provided
         if (!username || !email || !password) {
@@ -33,13 +33,8 @@ export const signup = async (req, res) => {
             });
         }
 
-        // Validate password confirmation if provided
-        if (confirmPassword && password !== confirmPassword) {
-            return res.status(400).json({
-                success: false,
-                message: 'Passwords do not match',
-            });
-        }
+
+
 
         // Call service to create user
         const newUser = await signupUser({
@@ -55,6 +50,7 @@ export const signup = async (req, res) => {
         });
     } catch (error) {
         // Handle specific error messages
+        console.log(error);
         if (
             error.message.includes('already exists') ||
             error.message.includes('required')
@@ -101,6 +97,8 @@ export const signin = async (req, res) => {
             email,
             password,
         });
+
+        console.log(user);
 
         return res.status(200).json({
             success: true,

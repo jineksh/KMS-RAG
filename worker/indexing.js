@@ -16,6 +16,8 @@ const indexingWorker = new Worker('indexing', async (job) => {
 
     try {
 
+        console.log('inside Worker');
+
 
         await indexingPhase(filePath, documentId);
 

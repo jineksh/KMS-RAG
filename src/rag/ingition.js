@@ -2,12 +2,14 @@ import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf"
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters"
 import { QdrantVectorStore } from "@langchain/qdrant"
 import { OpenAIEmbeddings } from "@langchain/openai"
+import { COLLECTION_NAME } from '../config/env.js'
 
 
-const COLLECTION_NAME = "KMS-RAG"
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const QDRANT_URL = process.env.QDRANT_URL;
+
+console.log(OPENAI_API_KEY)
 
 export async function indexingPhase(filePath) {
 
